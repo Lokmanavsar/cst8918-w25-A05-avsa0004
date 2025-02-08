@@ -52,7 +52,6 @@ resource "azurerm_public_ip" "public_ip" {
   location            = var.region
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Dynamic"
-  sku                 = "Standard"
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -118,14 +117,14 @@ resource "azurerm_network_interface_security_group_association" "webserver" {
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
-data "cloudinit_config" "init_config" {
+data "cloudinit_config" "init" {
   gzip          = false
-  base64_encode = false
+  base64_encode = true
 
   part {
     filename     = "init.sh"
     content_type = "text/x-shellscript"
-    content      = file("init.sh")
+    content      = file("${path.module}/init.sh")
   }
 }
 
@@ -159,9 +158,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   # Cloudinit script
-  custom_data = data.cloudinit_config.init_config.rendered
+  custom_data = data.cloudinit_config.init.rendered
 }
 
+# Define output values for later reference
 output "resource_group_name" {
   value = azurerm_resource_group.rg.name
 }
